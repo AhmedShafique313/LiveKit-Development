@@ -25,6 +25,7 @@ async def entrypoint(ctx: agents.JobContext):
         stt=deepgram.STT(),
         llm=groq.LLM(model="llama3-8b-8192"),
         tts=cartesia.TTS(),
+        # tts=groq.TTS(),
         vad=silero.VAD.load(),
         turn_detection=MultilingualModel(),
     )
