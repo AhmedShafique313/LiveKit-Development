@@ -1,2 +1,4 @@
 livekit
 livekit-api
+flask
+python-dotenv
