@@ -5,4 +5,6 @@
 
 ### LiveKit AI voice agent
 - Agent can talk real-time based (STT -> LLM -> TTS) mechanism using livekit and other supported platforms.
-- Telephony for (outbound calls)
+- Twilio Outbound
+- Integration with LiveKit
+- LiveKit & Twilio (Outbound) `lk dispatch create --new-room --agent-name my-telephony-agent`
