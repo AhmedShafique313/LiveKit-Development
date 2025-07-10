@@ -40,7 +40,8 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     await ctx.connect()
-    dial_info = {"phone_number": "+16467980578"}
+    # dial_info = {"phone_number": "+16467980578"}
+    dial_info = {"phone_number": "+923300349075"}
     phone_number = dial_info["phone_number"]
 
     sip_participant_identity = phone_number
