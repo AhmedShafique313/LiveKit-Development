@@ -67,14 +67,14 @@ async def entrypoint(ctx: agents.JobContext):
             instructions="Greet the user and offer your assistance."
         ) 
 
-    # await session.generate_reply(
-    #     instructions="Greet the user and offer your assistance."
-    # )
+    await session.generate_reply(
+        instructions="Greet the user and offer your assistance."
+    )
 
 
 
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
-        agent_name="my-telephony-agent"
+        agent_name="new-inbound-agent"
     ))

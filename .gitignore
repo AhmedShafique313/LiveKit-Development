@@ -1,3 +1,6 @@
 .env
 .development.env
 venv/
+dispatch-rule.json
+inbound-trunk.json
+log.txt
