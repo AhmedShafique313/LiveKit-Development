@@ -1,17 +1,8 @@
 from dotenv import load_dotenv
-import asyncio, logging, os, json
-from livekit import api
-from livekit import agents
-from typing import Any
-from livekit.agents import AgentSession, Agent, RoomInputOptions
-from livekit.plugins import (
-    openai,
-    cartesia,
-    deepgram,
-    noise_cancellation,
-    silero,
-    groq
-)
+import asyncio, os
+from livekit import api, agents
+from livekit.agents import Agent, AgentSession, RoomInputOptions
+from livekit.plugins import groq, cartesia, deepgram, silero, noise_cancellation
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 load_dotenv(dotenv_path=".env")
@@ -19,7 +10,7 @@ outbound_trunk_id = os.getenv("SIP_OUTBOUND_TRUNK_ID")
 
 class OutboundCaller(Agent):
     def __init__(self):
-        super().__init__(instructions="You are a real estate digital assistant and you're talking on the behalf of Ylopo. You task is to help the user interms of buying or selling a home")
+        super().__init__(instructions="You are a helpful voice assistant")
 
 
 async def entrypoint(ctx: agents.JobContext):
@@ -40,8 +31,8 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     await ctx.connect()
-    # dial_info = {"phone_number": "+16467980578"}
-    dial_info = {"phone_number": "+923300349075"}
+    dial_info = {"phone_number": "+16467980578"}
+    # dial_info = {"phone_number": "+923300349075"}
     phone_number = dial_info["phone_number"]
 
     sip_participant_identity = phone_number
@@ -76,5 +67,5 @@ async def entrypoint(ctx: agents.JobContext):
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(
         entrypoint_fnc=entrypoint,
-        agent_name="my-telephony-agent"
+        agent_name="my-outbound-agent"
     ))
