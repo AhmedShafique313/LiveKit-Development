@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from dotenv import load_dotenv
-import json
+import random
 import os
 from typing import Any
 
@@ -73,39 +73,6 @@ class OutboundCaller(Agent):
             )
         )
 
-    # @function_tool()
-    # async def transfer_call(self, ctx: RunContext):
-    #     """Transfer the call to a human agent, called after confirming with the user"""
-
-    #     transfer_to = self.dial_info["transfer_to"]
-    #     if not transfer_to:
-    #         return "cannot transfer call"
-
-    #     logger.info(f"transferring call to {transfer_to}")
-
-    #     # let the message play fully before transferring
-    #     await ctx.session.generate_reply(
-    #         instructions="let the user know you'll be transferring them"
-    #     )
-
-    #     job_ctx = get_job_context()
-    #     try:
-    #         await job_ctx.api.sip.transfer_sip_participant(
-    #             api.TransferSIPParticipantRequest(
-    #                 room_name=job_ctx.room.name,
-    #                 participant_identity=self.participant.identity,
-    #                 transfer_to=f"tel:{transfer_to}",
-    #             )
-    #         )
-
-    #         logger.info(f"transferred call to {transfer_to}")
-    #     except Exception as e:
-    #         logger.error(f"error transferring call: {e}")
-    #         await ctx.session.generate_reply(
-    #             instructions="there was an error transferring the call."
-    #         )
-    #         await self.hangup()
-
     @function_tool()
     async def end_call(self, ctx: RunContext):
         """Called when the user wants to end the call"""
@@ -164,16 +131,18 @@ class OutboundCaller(Agent):
 
 
 async def entrypoint(ctx: JobContext):
+
+    #making client
+
     logger.info(f"connecting to room {ctx.room.name}")
     await ctx.connect()
 
-    # when dispatching the agent, we'll pass it the approriate info to dial the user
-    # dial_info is a dict with the following keys:
-    # - phone_number: the phone number to dial
-    # - transfer_to: the phone number to transfer the call to when requested
-    # print("Issue:", ctx.job.metadata)
-    # print("Type of metadata:", type(ctx.job.metadata))
-    # dial_info = json.loads(ctx.job.metadata)
+
+    lkapi = api.LiveKitAPI(
+        api_key=os.getenv("LIVEKIT_API_KEY"),
+        api_secret=os.getenv("LIVEKIT_API_SECRET"),
+        url="wss://test1-z93avhzw.livekit.cloud",
+    )
     dial_info = {
     "phone_number": "+923300349075",
     
@@ -192,27 +161,20 @@ async def entrypoint(ctx: JobContext):
         turn_detection=EnglishModel(),
         vad=silero.VAD.load(),
         stt=deepgram.STT(),
-        # you can also use OpenAI's TTS with openai.TTS()
         tts=cartesia.TTS(),
         llm=groq.LLM(model="llama3-8b-8192"),
-        # you can also use a speech-to-speech model like OpenAI's Realtime API
-        # llm=openai.realtime.RealtimeModel()
     )
 
-    # start the session first before dialing, to ensure that when the user picks up
-    # the agent does not miss anything the user says
     session_started = asyncio.create_task(
         session.start(
             agent=agent,
             room=ctx.room,
             room_input_options=RoomInputOptions(
-                # enable Krisp background voice and noise removal
                 noise_cancellation=noise_cancellation.BVCTelephony(),
             ),
         )
     )
 
-    # `create_sip_participant` starts dialing the user
     try:
         await ctx.api.sip.create_sip_participant(
             api.CreateSIPParticipantRequest(
@@ -231,6 +193,13 @@ async def entrypoint(ctx: JobContext):
         logger.info(f"participant joined: {participant.identity}")
 
         agent.set_participant(participant)
+
+        await lkapi.agent_dispatch.create_dispatch(
+            api.CreateAgentDispatchRequest(
+                agent_name="outbound-caller",
+                room=f"outbound-{''.join(str(random.randint(0, 9)) for _ in range(10))}",
+            )
+        )
 
     except api.TwirpError as e:
         logger.error(
