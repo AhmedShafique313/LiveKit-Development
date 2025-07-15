@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-import asyncio, logging, os, json
+import asyncio, logging, os, json, random
 from livekit import api
 from livekit import agents
 from typing import Any
@@ -14,12 +14,15 @@ from livekit.plugins import (
 )
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
-load_dotenv(dotenv_path=".env")
-outbound_trunk_id = os.getenv("SIP_OUTBOUND_TRUNK_ID")
+# load_dotenv(dotenv_path=".env")
+# outbound_trunk_id = os.getenv("SIP_OUTBOUND_TRUNK_ID")
+
 
 class OutboundCaller(Agent):
     def __init__(self):
-        super().__init__(instructions="You are a real estate digital assistant and you're talking on the behalf of Ylopo. You task is to help the user interms of buying or selling a home")
+        super().__init__(
+            instructions="You are a real estate digital assistant and you're talking on behalf of Ylopo. Your task is to help the user in terms of buying or selling a home."
+        )
 
 
 async def entrypoint(ctx: agents.JobContext):
@@ -35,42 +38,50 @@ async def entrypoint(ctx: agents.JobContext):
         room=ctx.room,
         agent=OutboundCaller(),
         room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(), 
+            noise_cancellation=noise_cancellation.BVC(),
         ),
     )
 
     await ctx.connect()
-    # dial_info = {"phone_number": "+16467980578"}
-    dial_info = {"phone_number": "+923300349075"}
-    phone_number = dial_info["phone_number"]
+
+    # Get phone number from dispatch metadata
+    dial_info = json.loads(ctx.metadata) if ctx.metadata else {"phone_number": None}
+    phone_number = dial_info.get("phone_number")
 
     sip_participant_identity = phone_number
     if phone_number is not None:
         try:
             await ctx.api.sip.create_sip_participant(api.CreateSIPParticipantRequest(
                 room_name=ctx.room.name,
-                sip_trunk_id=outbound_trunk_id,
+                sip_trunk_id="ST_YhYu2bronxxk",
                 sip_call_to=phone_number,
                 participant_identity=sip_participant_identity,
                 wait_until_answered=True,
             ))
-        
-            print("call picked up successfully")
+
+            print("Call picked up successfully")
         except api.TwirpError as e:
-            print(f"error creating SIP participant: {e.message}, "
+            print(f"Error creating SIP participant: {e.message}, "
                   f"SIP status: {e.metadata.get('sip_status_code')} "
                   f"{e.metadata.get('sip_status')}")
             ctx.shutdown()
 
-    if phone_number is None:
+    else:
         await session.generate_reply(
             instructions="Greet the user and offer your assistance."
-        ) 
+        )
 
-    # await session.generate_reply(
-    #     instructions="Greet the user and offer your assistance."
-    # )
+    
+    await api.CreateAgentDispatchRequest(
+        # Use the agent name you set in the WorkerOptions
+        agent_name="my-telephony-agent", 
 
+        # The room name to use. This should be unique for each call
+        room=f"outbound-{''.join(str(random.randint(0, 9)) for _ in range(10))}",
+
+        # Here we use JSON to pass the phone number, and could add more information if needed.
+        metadata='{"phone_number": "+923300349075"}'
+    )
 
 
 if __name__ == "__main__":

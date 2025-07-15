@@ -34,7 +34,7 @@ load_dotenv(dotenv_path=".env.local")
 logger = logging.getLogger("outbound-caller")
 logger.setLevel(logging.INFO)
 
-outbound_trunk_id = os.getenv("SIP_OUTBOUND_TRUNK_ID")
+# outbound_trunk_id = os.getenv("SIP_OUTBOUND_TRUNK_ID")
 
 
 class OutboundCaller(Agent):
@@ -73,38 +73,38 @@ class OutboundCaller(Agent):
             )
         )
 
-    @function_tool()
-    async def transfer_call(self, ctx: RunContext):
-        """Transfer the call to a human agent, called after confirming with the user"""
+    # @function_tool()
+    # async def transfer_call(self, ctx: RunContext):
+    #     """Transfer the call to a human agent, called after confirming with the user"""
 
-        transfer_to = self.dial_info["transfer_to"]
-        if not transfer_to:
-            return "cannot transfer call"
+    #     transfer_to = self.dial_info["transfer_to"]
+    #     if not transfer_to:
+    #         return "cannot transfer call"
 
-        logger.info(f"transferring call to {transfer_to}")
+    #     logger.info(f"transferring call to {transfer_to}")
 
-        # let the message play fully before transferring
-        await ctx.session.generate_reply(
-            instructions="let the user know you'll be transferring them"
-        )
+    #     # let the message play fully before transferring
+    #     await ctx.session.generate_reply(
+    #         instructions="let the user know you'll be transferring them"
+    #     )
 
-        job_ctx = get_job_context()
-        try:
-            await job_ctx.api.sip.transfer_sip_participant(
-                api.TransferSIPParticipantRequest(
-                    room_name=job_ctx.room.name,
-                    participant_identity=self.participant.identity,
-                    transfer_to=f"tel:{transfer_to}",
-                )
-            )
+    #     job_ctx = get_job_context()
+    #     try:
+    #         await job_ctx.api.sip.transfer_sip_participant(
+    #             api.TransferSIPParticipantRequest(
+    #                 room_name=job_ctx.room.name,
+    #                 participant_identity=self.participant.identity,
+    #                 transfer_to=f"tel:{transfer_to}",
+    #             )
+    #         )
 
-            logger.info(f"transferred call to {transfer_to}")
-        except Exception as e:
-            logger.error(f"error transferring call: {e}")
-            await ctx.session.generate_reply(
-                instructions="there was an error transferring the call."
-            )
-            await self.hangup()
+    #         logger.info(f"transferred call to {transfer_to}")
+    #     except Exception as e:
+    #         logger.error(f"error transferring call: {e}")
+    #         await ctx.session.generate_reply(
+    #             instructions="there was an error transferring the call."
+    #         )
+    #         await self.hangup()
 
     @function_tool()
     async def end_call(self, ctx: RunContext):
@@ -175,14 +175,14 @@ async def entrypoint(ctx: JobContext):
     # print("Type of metadata:", type(ctx.job.metadata))
     # dial_info = json.loads(ctx.job.metadata)
     dial_info = {
-    "phone_number": "+16467980578",
-    "transfer_to": "+12029687988"
+    "phone_number": "+923300349075",
+    
     }
     participant_identity = phone_number = dial_info["phone_number"]
 
     # look up the user's phone number and appointment details
     agent = OutboundCaller(
-        name="Jayden",
+        name="Ahmed",
         appointment_time="next Tuesday at 3pm",
         dial_info=dial_info,
     )
@@ -217,8 +217,8 @@ async def entrypoint(ctx: JobContext):
         await ctx.api.sip.create_sip_participant(
             api.CreateSIPParticipantRequest(
                 room_name=ctx.room.name,
-                sip_trunk_id=outbound_trunk_id,
-                sip_call_to=phone_number,
+                sip_trunk_id="ST_YhYu2bronxxk",
+                sip_call_to="+923300349075",
                 participant_identity=participant_identity,
                 # function blocks until user answers the call, or if the call fails
                 wait_until_answered=True,

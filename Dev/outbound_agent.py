@@ -26,13 +26,14 @@ async def entrypoint(ctx: agents.JobContext):
         room=ctx.room,
         agent=OutboundCaller(),
         room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(), 
+            noise_cancellation=noise_cancellation.BVC(),
+            # close_on_disconnect=False
         ),
     )
 
     await ctx.connect()
-    dial_info = {"phone_number": "+16467980578"}
-    # dial_info = {"phone_number": "+923300349075"}
+    # dial_info = {"phone_number": "+16467980578"}
+    dial_info = {"phone_number": os.getenv("DYNAMIC_PHONE_NUMBER")}
     phone_number = dial_info["phone_number"]
 
     sip_participant_identity = phone_number
@@ -40,6 +41,7 @@ async def entrypoint(ctx: agents.JobContext):
         try:
             await ctx.api.sip.create_sip_participant(api.CreateSIPParticipantRequest(
                 room_name=ctx.room.name,
+                # room_name="open-room",
                 sip_trunk_id=outbound_trunk_id,
                 sip_call_to=phone_number,
                 participant_identity=sip_participant_identity,
@@ -58,14 +60,11 @@ async def entrypoint(ctx: agents.JobContext):
             instructions="Greet the user and offer your assistance."
         ) 
 
-    # await session.generate_reply(
-    #     instructions="Greet the user and offer your assistance."
-    # )
-
-
-
 if __name__ == "__main__":
-    agents.cli.run_app(agents.WorkerOptions(
-        entrypoint_fnc=entrypoint,
-        agent_name="my-outbound-agent"
-    ))
+    user_phone_number = input("Enter the phone number to dial: ").strip()
+    os.environ["DYNAMIC_PHONE_NUMBER"] = user_phone_number
+    agents.cli.run_app(
+        agents.WorkerOptions(
+            entrypoint_fnc=entrypoint,
+            agent_name="my-outbound-agent"
+        ))
