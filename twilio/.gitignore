@@ -1,0 +1,6 @@
+.env
+logs.txt
+outbound-trunk.json
+participant.json
+sip-participant-tone.json
+sip-participant.json
